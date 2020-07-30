@@ -14,6 +14,7 @@ install:
 script:
   - make flake
   - make check
+  - make docker_build
 
 env:
   global:
