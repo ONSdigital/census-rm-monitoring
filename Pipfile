@@ -9,7 +9,6 @@ flake8 = "*"
 [packages]
 requests = "*"
 psycopg2-binary = "*"
-python-dateutil = "*"
 pika = "*"
 
 [requires]
