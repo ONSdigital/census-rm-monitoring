@@ -17,6 +17,6 @@ class Config:
     DB_NAME = os.getenv('DB_NAME', 'postgres')
     DB_USESSL = os.getenv('DB_USESSL', '')
     DB_ACTION_CERTIFICATES = os.getenv('DB_ACTION_CERTIFICATES',
-                                       (" sslmode=verify-ca sslrootcert=/home/toolbox/.postgresql-action/root.crt "
-                                        "sslcert=/home/toolbox/.postgresql-action/postgresql.crt "
-                                        "sslkey=/home/toolbox/.postgresql-action/postgresql.key"))
+                                       (" sslmode=verify-ca sslrootcert=/home/monitoring/.postgresql-action/root.crt "
+                                        "sslcert=/home/monitoring/.postgresql-action/postgresql.crt "
+                                        "sslkey=/home/monitoring/.postgresql-action/postgresql.key"))
