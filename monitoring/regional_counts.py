@@ -13,7 +13,7 @@ SELECT CASE counts.region
 FROM (SELECT LEFT(region, 1) AS region, COUNT(*) AS region_count
       FROM casev2.cases
       WHERE receipt_received = true
-        AND action_plan_id = '432f0597-0076-4adb-834b-bf249dc06ded'
+        AND action_plan_id = 'c4415287-0e37-447b-9c3d-1a011c9fa3db'
       GROUP BY LEFT(region, 1)) AS counts
     """
 
