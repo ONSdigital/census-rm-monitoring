@@ -17,6 +17,11 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
+    get_queue_stats(args)
+    get_connection_stats()
+
+
+def get_queue_stats(args):
     v_host = urllib.parse.quote(Config.RABBITMQ_VHOST, safe='')
 
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/",
@@ -60,6 +65,43 @@ def main():
 
         if args.redeliver and redeliver_rate > 1 or not args.redeliver:
             print(json.dumps(json_to_log))
+
+
+def get_connection_stats():
+
+    response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/connections/",
+                            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+    all_connections = response.json()
+
+    node_data = {}
+
+    for connection_details in all_connections:
+
+        node_name = connection_details.get('node')
+        user_name = connection_details.get('user')
+        num_of_channels = connection_details.get('channels')
+
+        user_details = None
+        node_details = node_data.get(node_name)
+
+        if node_details:
+            user_details = node_details.get(user_name)
+        else:
+            node_data[node_name] = {}
+
+        if not user_details:
+            user_details = {
+                'number_of_connections': 0,
+                'number_of_channels': 0
+            }
+
+            node_data[node_name][user_name] = user_details
+
+        user_details['number_of_connections'] = user_details['number_of_connections'] + 1
+        user_details['number_of_channels'] = user_details['number_of_channels'] + num_of_channels
+
+    print(json.dumps(node_data))
 
 
 if __name__ == "__main__":
