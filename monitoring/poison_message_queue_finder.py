@@ -19,6 +19,7 @@ def main():
 
     get_queue_stats(args)
     get_connection_stats()
+    get_churn_stats()
 
 
 def get_queue_stats(args):
@@ -67,43 +68,59 @@ def get_queue_stats(args):
             print(json.dumps(json_to_log))
 
 
-def get_connection_stats():
+def get_churn_stats():
+    response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/overview",
+                            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
 
+    churn = response.json()['churn_rates']
+
+    churn_output = {'connection_closed_rate': churn["connection_closed_details"]["rate"],
+                    'connections_created_rate': churn["connection_created_details"]["rate"],
+                    'connection_closed_add_created_rate':
+                        churn["connection_closed_details"]["rate"] + churn["connection_created_details"]["rate"],
+                    'channel_closed_rate': churn["channel_closed_details"]["rate"],
+                    'channel_created_rate': churn["channel_created_details"]["rate"],
+                    'channel_closed_add_created_rate':
+                        churn["channel_closed_details"]["rate"] + churn["channel_created_details"]["rate"],
+                    }
+
+    print(json.dumps(churn_output))
+
+
+def get_connection_stats():
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/connections/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
 
     all_connections = response.json()
 
-    print(json.dumps(all_connections))
+    node_data = {}
 
-    # node_data = {}
-    #
-    # for connection_details in all_connections:
-    #
-    #     node_name = connection_details.get('node')
-    #     user_name = connection_details.get('user')
-    #     num_of_channels = connection_details.get('channels')
-    #
-    #     user_details = None
-    #     node_details = node_data.get(node_name)
-    #
-    #     if node_details:
-    #         user_details = node_details.get(user_name)
-    #     else:
-    #         node_data[node_name] = {}
-    #
-    #     if not user_details:
-    #         user_details = {
-    #             'number_of_connections': 0,
-    #             'number_of_channels': 0
-    #         }
-    #
-    #         node_data[node_name][user_name] = user_details
-    #
-    #     user_details['number_of_connections'] = user_details['number_of_connections'] + 1
-    #     user_details['number_of_channels'] = user_details['number_of_channels'] + num_of_channels
-    #
-    # print(json.dumps(node_data))
+    for connection_details in all_connections:
+
+        node_name = connection_details.get('node')
+        user_name = connection_details.get('user')
+        num_of_channels = connection_details.get('channels')
+
+        user_details = None
+        node_details = node_data.get(node_name)
+
+        if node_details:
+            user_details = node_details.get(user_name)
+        else:
+            node_data[node_name] = {}
+
+        if not user_details:
+            user_details = {
+                'number_of_connections': 0,
+                'number_of_channels': 0
+            }
+
+            node_data[node_name][user_name] = user_details
+
+        user_details['number_of_connections'] = user_details['number_of_connections'] + 1
+        user_details['number_of_channels'] = user_details['number_of_channels'] + num_of_channels
+
+    print(json.dumps(node_data))
 
 
 if __name__ == "__main__":
