@@ -38,11 +38,13 @@ def get_queue_stats(args):
             print(f'Unexpected data for queue: {queue}')
             continue
 
-        queue_details = requests.get(
+        queue_details_response = requests.get(
             f'http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/{v_host}/{queue_name}',
-            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)).json()
+            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
 
-        queue_details.raise_for_status()
+        queue_details_response.raise_for_status()
+
+        queue_details = queue_details_response.json()
 
         redeliver_rate = queue_details.get('message_stats', {}).get('redeliver_details', {}).get('rate', 0)
         publish_rate = queue_details.get('message_stats', {}).get('publish_details', {}).get('rate', 0)
