@@ -109,7 +109,15 @@ def get_connection_stats():
         user_details['number_of_connections'] = user_details['number_of_connections'] + 1
         user_details['number_of_channels'] = user_details['number_of_channels'] + num_of_channels
 
-    print(json.dumps(node_data))
+    for node_key, node_value in node_data.items():
+        for user_key, user_value in node_value.items():
+            json_to_dump = {
+                'node': node_key,
+                'user': user_key,
+                'number_of_connections': user_value['number_of_connections'],
+                'number_of_channels': user_value['number_of_channels']
+            }
+            print(json.dumps(json_to_dump))
 
 
 if __name__ == "__main__":
