@@ -71,6 +71,7 @@ def get_queue_stats(args):
 def get_churn_stats():
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/overview",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+    response.raise_for_status()
 
     churn = response.json()['churn_rates']
 
