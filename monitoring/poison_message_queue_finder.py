@@ -19,6 +19,7 @@ def main():
 
     get_queue_stats(args)
     get_connection_stats()
+    get_churn_stats()
 
 
 def get_queue_stats(args):
@@ -102,6 +103,26 @@ def get_connection_stats():
         user_details['number_of_channels'] = user_details['number_of_channels'] + num_of_channels
 
     print(json.dumps(node_data))
+
+
+def get_churn_stats():
+    response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/overview",
+                            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+    response.raise_for_status()
+
+    churn = response.json()['churn_rates']
+
+    churn_output = {'connection_closed_rate': churn["connection_closed_details"]["rate"],
+                    'connections_created_rate': churn["connection_created_details"]["rate"],
+                    'connection_closed_add_created_rate':
+                        churn["connection_closed_details"]["rate"] + churn["connection_created_details"]["rate"],
+                    'channel_closed_rate': churn["channel_closed_details"]["rate"],
+                    'channel_created_rate': churn["channel_created_details"]["rate"],
+                    'channel_closed_add_created_rate':
+                        churn["channel_closed_details"]["rate"] + churn["channel_created_details"]["rate"],
+                    }
+
+    print(json.dumps(churn_output))
 
 
 if __name__ == "__main__":
