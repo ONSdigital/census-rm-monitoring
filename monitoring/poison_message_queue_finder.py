@@ -27,6 +27,8 @@ def get_queue_stats(args):
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
 
+    response.raise_for_status()
+
     all_queues = response.json()
 
     for queue in all_queues:
@@ -39,6 +41,8 @@ def get_queue_stats(args):
         queue_details = requests.get(
             f'http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/{v_host}/{queue_name}',
             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)).json()
+
+        queue_details.raise_for_status()
 
         redeliver_rate = queue_details.get('message_stats', {}).get('redeliver_details', {}).get('rate', 0)
         publish_rate = queue_details.get('message_stats', {}).get('publish_details', {}).get('rate', 0)
@@ -71,6 +75,8 @@ def get_connection_stats():
 
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/connections/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+    response.raise_for_status()
 
     all_connections = response.json()
 
