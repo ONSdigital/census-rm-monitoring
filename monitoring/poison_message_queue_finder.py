@@ -17,10 +17,17 @@ def parse_arguments():
 def main():
     args = parse_arguments()
 
+    get_queue_stats(args)
+    get_connection_stats()
+
+
+def get_queue_stats(args):
     v_host = urllib.parse.quote(Config.RABBITMQ_VHOST, safe='')
 
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+    response.raise_for_status()
 
     all_queues = response.json()
 
@@ -31,9 +38,13 @@ def main():
             print(f'Unexpected data for queue: {queue}')
             continue
 
-        queue_details = requests.get(
+        queue_details_response = requests.get(
             f'http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/{v_host}/{queue_name}',
-            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)).json()
+            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+        queue_details_response.raise_for_status()
+
+        queue_details = queue_details_response.json()
 
         redeliver_rate = queue_details.get('message_stats', {}).get('redeliver_details', {}).get('rate', 0)
         publish_rate = queue_details.get('message_stats', {}).get('publish_details', {}).get('rate', 0)
@@ -60,6 +71,53 @@ def main():
 
         if args.redeliver and redeliver_rate > 1 or not args.redeliver:
             print(json.dumps(json_to_log))
+
+
+def get_connection_stats():
+
+    response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/connections/",
+                            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+    response.raise_for_status()
+
+    all_connections = response.json()
+
+    node_data = {}
+
+    for connection_details in all_connections:
+
+        node_name = connection_details.get('node')
+        user_name = connection_details.get('user')
+        num_of_channels = connection_details.get('channels')
+
+        user_details = None
+        node_details = node_data.get(node_name)
+
+        if node_details:
+            user_details = node_details.get(user_name)
+        else:
+            node_data[node_name] = {}
+
+        if not user_details:
+            user_details = {
+                'number_of_connections': 0,
+                'number_of_channels': 0
+            }
+
+            node_data[node_name][user_name] = user_details
+
+        user_details['number_of_connections'] = user_details['number_of_connections'] + 1
+        user_details['number_of_channels'] = user_details['number_of_channels'] + num_of_channels
+
+    for node_key, node_value in node_data.items():
+        for user_key, user_value in node_value.items():
+            json_to_dump = {
+                'node': node_key,
+                'user': user_key,
+                'number_of_connections': user_value['number_of_connections'],
+                'number_of_channels': user_value['number_of_channels']
+            }
+            print(json.dumps(json_to_dump))
 
 
 if __name__ == "__main__":
