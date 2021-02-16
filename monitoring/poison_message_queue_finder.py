@@ -23,11 +23,6 @@ def main():
 
 
 def get_queue_stats(args):
-    get_queue_stats(args)
-    get_connection_stats()
-
-
-def get_queue_stats(args):
     v_host = urllib.parse.quote(Config.RABBITMQ_VHOST, safe='')
 
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/",
