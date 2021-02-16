@@ -23,10 +23,17 @@ def main():
 
 
 def get_queue_stats(args):
+    get_queue_stats(args)
+    get_connection_stats()
+
+
+def get_queue_stats(args):
     v_host = urllib.parse.quote(Config.RABBITMQ_VHOST, safe='')
 
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+    response.raise_for_status()
 
     all_queues = response.json()
 
@@ -37,9 +44,13 @@ def get_queue_stats(args):
             print(f'Unexpected data for queue: {queue}')
             continue
 
-        queue_details = requests.get(
+        queue_details_response = requests.get(
             f'http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/queues/{v_host}/{queue_name}',
-            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD)).json()
+            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+        queue_details_response.raise_for_status()
+
+        queue_details = queue_details_response.json()
 
         redeliver_rate = queue_details.get('message_stats', {}).get('redeliver_details', {}).get('rate', 0)
         publish_rate = queue_details.get('message_stats', {}).get('publish_details', {}).get('rate', 0)
@@ -68,10 +79,32 @@ def get_queue_stats(args):
             print(json.dumps(json_to_log))
 
 
+def get_churn_stats():
+    response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/overview",
+                            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+    response.raise_for_status()
+
+    churn = response.json()['churn_rates']
+
+    churn_output = {'connection_closed_rate': churn["connection_closed_details"]["rate"],
+                    'connections_created_rate': churn["connection_created_details"]["rate"],
+                    'connection_closed_add_created_rate':
+                        churn["connection_closed_details"]["rate"] + churn["connection_created_details"]["rate"],
+                    'channel_closed_rate': churn["channel_closed_details"]["rate"],
+                    'channel_created_rate': churn["channel_created_details"]["rate"],
+                    'channel_closed_add_created_rate':
+                        churn["channel_closed_details"]["rate"] + churn["channel_created_details"]["rate"],
+                    }
+
+    print(json.dumps(churn_output))
+
+
 def get_connection_stats():
 
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/connections/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
+
+    response.raise_for_status()
 
     all_connections = response.json()
 
@@ -102,27 +135,15 @@ def get_connection_stats():
         user_details['number_of_connections'] = user_details['number_of_connections'] + 1
         user_details['number_of_channels'] = user_details['number_of_channels'] + num_of_channels
 
-    print(json.dumps(node_data))
-
-
-def get_churn_stats():
-    response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/overview",
-                            auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
-    response.raise_for_status()
-
-    churn = response.json()['churn_rates']
-
-    churn_output = {'connection_closed_rate': churn["connection_closed_details"]["rate"],
-                    'connections_created_rate': churn["connection_created_details"]["rate"],
-                    'connection_closed_add_created_rate':
-                        churn["connection_closed_details"]["rate"] + churn["connection_created_details"]["rate"],
-                    'channel_closed_rate': churn["channel_closed_details"]["rate"],
-                    'channel_created_rate': churn["channel_created_details"]["rate"],
-                    'channel_closed_add_created_rate':
-                        churn["channel_closed_details"]["rate"] + churn["channel_created_details"]["rate"],
-                    }
-
-    print(json.dumps(churn_output))
+    for node_key, node_value in node_data.items():
+        for user_key, user_value in node_value.items():
+            json_to_dump = {
+                'node': node_key,
+                'user': user_key,
+                'number_of_connections': user_value['number_of_connections'],
+                'number_of_channels': user_value['number_of_channels']
+            }
+            print(json.dumps(json_to_dump))
 
 
 if __name__ == "__main__":
