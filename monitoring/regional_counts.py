@@ -10,11 +10,10 @@ SELECT CASE counts.region
            WHEN 'N' THEN 'Northern Ireland'
            ELSE 'Unknown Region: ' || counts.region END,
        counts.region_count
-FROM (SELECT LEFT(region, 1) AS region, COUNT(*) AS region_count
-      FROM casev2.cases
-      WHERE receipt_received = true
-        AND action_plan_id = 'c4415287-0e37-447b-9c3d-1a011c9fa3db'
-      GROUP BY LEFT(region, 1)) AS counts
+FROM (SELECT LEFT(c.region,1) as region, COUNT(*) AS region_count
+      FROM casev2.uac_qid_link q, casev2.cases c
+      WHERE q.active='f' AND q.caze_case_id = c.case_id AND c.action_plan_id = 'c4415287-0e37-447b-9c3d-1a011c9fa3db'
+      GROUP BY LEFT(c.region,1)) AS counts
     """
 
     db_result = execute_sql_query(sql_query)
