@@ -31,7 +31,7 @@ def get_response_events():
                WHEN 'E' THEN 'England Responses'
                WHEN 'W' THEN 'Wales Responses'
                WHEN 'N' THEN 'Northern Ireland Responses'
-               ELSE 'Unknown Region: ' || counts.region END,
+               ELSE 'Unknown Region Responses' || counts.region END,
            counts.region_count
     FROM (SELECT LEFT(c.region,1) as region, COUNT(*) AS region_count
           FROM casev2.event e, casev2.uac_qid_link q, casev2.cases c
