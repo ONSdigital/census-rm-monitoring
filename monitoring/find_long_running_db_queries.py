@@ -6,7 +6,7 @@ from utilities.db_helper import execute_sql_query
 if __name__ == "__main__":
     long_running_query_check = """SELECT pid, age(clock_timestamp(), query_start), usename, query 
                                FROM pg_stat_activity 
-                               WHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' And usename != 'rmuser' 
+                               WHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' And query not like 'SET application_name%' 
                                ORDER BY query_start desc;"""
     case_result = execute_sql_query(long_running_query_check)
 
