@@ -33,7 +33,7 @@ def get_response_events():
                WHEN 'N' THEN 'Northern Ireland Responses'
                ELSE 'Unknown Region Responses' || counts.region END,
            counts.region_count
-    FROM (SELECT LEFT(c.region,1) as region, COUNT(*) AS region_count
+    FROM (SELECT LEFT(c.region,1) as region, COUNT(distinct(q.qid)) AS region_count
           FROM casev2.event e, casev2.uac_qid_link q, casev2.cases c
           WHERE e.event_type='RESPONSE_RECEIVED' AND e.uac_qid_link_id = q.id
           AND q.active = 'f' AND q.caze_case_id = c.case_id
