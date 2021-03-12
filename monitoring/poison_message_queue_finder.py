@@ -20,6 +20,7 @@ def main():
     get_queue_stats(args)
     get_connection_stats()
     get_churn_stats()
+    get_bad_message_counts()
 
 
 def get_queue_stats(args):
@@ -95,7 +96,6 @@ def get_churn_stats():
 
 
 def get_connection_stats():
-
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/connections/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
 
@@ -139,6 +139,26 @@ def get_connection_stats():
                 'number_of_channels': user_value['number_of_channels']
             }
             print(json.dumps(json_to_dump))
+
+
+def get_bad_message_counts():
+    response = requests.get(f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount=4')
+    response.raise_for_status()
+
+    messages = response.json()
+    queue_counts = {}
+    for message in messages:
+        if message['affectedQueues'][0] not in queue_counts:
+            queue_counts[message['affectedQueues'][0]] = 1
+        else:
+            queue_counts[message['affectedQueues'][0]] += 1
+
+    for queue, count in queue_counts.items():
+        json_to_log = {
+            "queue_name": queue,
+            "bad_message_count": count
+        }
+        print(json.dumps(json_to_log))
 
 
 if __name__ == "__main__":
