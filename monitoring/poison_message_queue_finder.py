@@ -3,6 +3,7 @@ import json
 import urllib.parse
 
 import requests
+from requests import ConnectionError, HTTPError
 from requests.auth import HTTPBasicAuth
 
 from config import Config
@@ -142,8 +143,14 @@ def get_connection_stats():
 
 
 def get_bad_message_counts():
-    response = requests.get(f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount={Config.BAD_MESSAGE_MINIMUM_SEEN_COUNT}')
-    response.raise_for_status()
+    try:
+        response = requests.get(
+            f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount= \
+            {Config.BAD_MESSAGE_MINIMUM_SEEN_COUNT}')
+        response.raise_for_status()
+    except (ConnectionError, HTTPError) as e:
+        print(f'Error with exception manager, error: {e}')
+        return
 
     messages = response.json()
     queue_counts = {}
