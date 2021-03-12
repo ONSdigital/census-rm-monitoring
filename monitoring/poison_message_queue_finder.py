@@ -142,7 +142,7 @@ def get_connection_stats():
 
 
 def get_bad_message_counts():
-    response = requests.get(f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount=4')
+    response = requests.get(f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount={Config.BAD_MESSAGE_MINIMUM_SEEN_COUNT}')
     response.raise_for_status()
 
     messages = response.json()
