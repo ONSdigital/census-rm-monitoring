@@ -148,10 +148,11 @@ def get_bad_message_counts():
     messages = response.json()
     queue_counts = {}
     for message in messages:
-        if message['affectedQueues'][0] not in queue_counts:
-            queue_counts[message['affectedQueues'][0]] = 1
-        else:
-            queue_counts[message['affectedQueues'][0]] += 1
+        for affected_queue in message['affectedQueues']:
+            if affected_queue not in queue_counts:
+                queue_counts[affected_queue] = 1
+            else:
+                queue_counts[affected_queue] += 1
 
     for queue, count in queue_counts.items():
         json_to_log = {
