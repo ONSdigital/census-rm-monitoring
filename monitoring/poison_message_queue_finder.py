@@ -21,7 +21,6 @@ def main():
     get_queue_stats(args)
     get_connection_stats()
     get_churn_stats()
-    # get_bad_message_counts()
 
 
 def get_queue_stats(args):
