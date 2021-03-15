@@ -20,3 +20,7 @@ class Config:
                                        (" sslmode=verify-ca sslrootcert=/home/monitoring/.postgresql-action/root.crt "
                                         "sslcert=/home/monitoring/.postgresql-action/postgresql.crt "
                                         "sslkey=/home/monitoring/.postgresql-action/postgresql.key"))
+    EXCEPTIONMANAGER_HOST = os.getenv('EXCEPTIONMANAGER_HOST', 'localhost')
+    EXCEPTIONMANAGER_PORT = os.getenv('EXCEPTIONMANAGER_PORT', '8666')
+    EXCEPTIONMANAGER_URL = f'http://{EXCEPTIONMANAGER_HOST}:{EXCEPTIONMANAGER_PORT}'
+    BAD_MESSAGE_MINIMUM_SEEN_COUNT = os.getenv('BAD_MESSAGE_MINIMUM_SEEN_COUNT', '4')

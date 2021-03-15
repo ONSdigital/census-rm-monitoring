@@ -3,6 +3,7 @@ import json
 import urllib.parse
 
 import requests
+from requests import ConnectionError, HTTPError
 from requests.auth import HTTPBasicAuth
 
 from config import Config
@@ -31,6 +32,8 @@ def get_queue_stats(args):
     response.raise_for_status()
 
     all_queues = response.json()
+
+    bad_message_counts = get_bad_message_counts()
 
     for queue in all_queues:
         try:
@@ -68,6 +71,7 @@ def get_queue_stats(args):
             "total_messages": total_messages,
             "consumer_count": consumer_count,
             "adjusted_total_messages": adjusted_total_messages,
+            "bad_message_count": bad_message_counts.get(queue_name, 0),
         }
 
         if args.redeliver and redeliver_rate > 1 or not args.redeliver:
@@ -95,7 +99,6 @@ def get_churn_stats():
 
 
 def get_connection_stats():
-
     response = requests.get(f"http://{Config.RABBITMQ_HOST}:{Config.RABBITMQ_HTTP_PORT}/api/connections/",
                             auth=HTTPBasicAuth(Config.RABBITMQ_USER, Config.RABBITMQ_PASSWORD))
 
@@ -139,6 +142,28 @@ def get_connection_stats():
                 'number_of_channels': user_value['number_of_channels']
             }
             print(json.dumps(json_to_dump))
+
+
+def get_bad_message_counts():
+    queue_counts = {}
+    try:
+        response = requests.get(
+            f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount='
+            f'{Config.BAD_MESSAGE_MINIMUM_SEEN_COUNT}')
+        response.raise_for_status()
+    except (ConnectionError, HTTPError) as e:
+        print(json.dumps({'severity': 'ERROR', 'error': f'Error with exception manager, error: {e}'}))
+        return queue_counts
+
+    messages = response.json()
+    for message in messages:
+        for affected_queue in message['affectedQueues']:
+            if affected_queue not in queue_counts:
+                queue_counts[affected_queue] = 1
+            else:
+                queue_counts[affected_queue] += 1
+
+    return queue_counts
 
 
 if __name__ == "__main__":
