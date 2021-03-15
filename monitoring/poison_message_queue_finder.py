@@ -21,7 +21,7 @@ def main():
     get_queue_stats(args)
     get_connection_stats()
     get_churn_stats()
-    get_bad_message_counts()
+    # get_bad_message_counts()
 
 
 def get_queue_stats(args):
@@ -33,6 +33,8 @@ def get_queue_stats(args):
     response.raise_for_status()
 
     all_queues = response.json()
+
+    bad_message_counts = get_bad_message_counts()
 
     for queue in all_queues:
         try:
@@ -70,6 +72,7 @@ def get_queue_stats(args):
             "total_messages": total_messages,
             "consumer_count": consumer_count,
             "adjusted_total_messages": adjusted_total_messages,
+            "bad_message_count": bad_message_counts.get(queue_name, 0),
         }
 
         if args.redeliver and redeliver_rate > 1 or not args.redeliver:
@@ -143,6 +146,7 @@ def get_connection_stats():
 
 
 def get_bad_message_counts():
+    queue_counts = {}
     try:
         response = requests.get(
             f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount= \
@@ -150,10 +154,9 @@ def get_bad_message_counts():
         response.raise_for_status()
     except (ConnectionError, HTTPError) as e:
         print(json.dumps({'severity': 'ERROR', 'error': f'Error with exception manager, error: {e}'}))
-        return
+        return queue_counts
 
     messages = response.json()
-    queue_counts = {}
     for message in messages:
         for affected_queue in message['affectedQueues']:
             if affected_queue not in queue_counts:
@@ -161,12 +164,7 @@ def get_bad_message_counts():
             else:
                 queue_counts[affected_queue] += 1
 
-    for queue, count in queue_counts.items():
-        json_to_log = {
-            "queue_name": queue,
-            "bad_message_count": count
-        }
-        print(json.dumps(json_to_log))
+    return queue_counts
 
 
 if __name__ == "__main__":
