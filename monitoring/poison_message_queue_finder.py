@@ -149,8 +149,8 @@ def get_bad_message_counts():
     queue_counts = {}
     try:
         response = requests.get(
-            f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount= \
-            {Config.BAD_MESSAGE_MINIMUM_SEEN_COUNT}')
+            f'{Config.EXCEPTIONMANAGER_URL}/badmessages/summary?minimumSeenCount='
+            f'{Config.BAD_MESSAGE_MINIMUM_SEEN_COUNT}')
         response.raise_for_status()
     except (ConnectionError, HTTPError) as e:
         print(json.dumps({'severity': 'ERROR', 'error': f'Error with exception manager, error: {e}'}))
