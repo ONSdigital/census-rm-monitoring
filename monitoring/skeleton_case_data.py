@@ -5,7 +5,7 @@ from utilities.db_helper import execute_sql_query
 
 def get_skeleton_case_data():
     sql_query = """
-        SELECT COUNT(*) As TotalCases ,
+        SELECT COUNT(*) As TotalCases,
                AVG(DATE_PART('day', NOW()::timestamp - created_date_time::timestamp))::integer As average_days_old,
                LEFT(region, 1) AS region, case_type
         FROM casev2.cases
@@ -14,9 +14,9 @@ def get_skeleton_case_data():
         AND receipt_received = 'f'
         AND refusal_received IS NULL
         GROUP BY  LEFT(region, 1), case_type
-        
+
         UNION ALL
-        
+
         SELECT COUNT(*) As TotalCases ,
                AVG(DATE_PART('day', NOW()::timestamp - created_date_time::timestamp))::integer As average_days_old,
                'All Regions', case_type
@@ -26,9 +26,9 @@ def get_skeleton_case_data():
         AND receipt_received = 'f'
         AND refusal_received IS NULL
         GROUP BY case_type
-        
+
         UNION ALL
-        
+
         SELECT COUNT(*) As TotalCases ,
                AVG(DATE_PART('day', NOW()::timestamp - created_date_time::timestamp))::integer As average_days_old,
                LEFT(region, 1), 'All Cases'
@@ -38,9 +38,9 @@ def get_skeleton_case_data():
         AND receipt_received = 'f'
         AND refusal_received IS NULL
         GROUP BY LEFT(region, 1)
-        
+
         UNION ALL
-        
+
         SELECT COUNT(*) As TotalCases ,
                AVG(DATE_PART('day', NOW()::timestamp - created_date_time::timestamp))::integer As average_days_old,
                'All regions', 'All Cases'
