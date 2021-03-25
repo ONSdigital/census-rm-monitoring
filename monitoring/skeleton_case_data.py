@@ -53,9 +53,10 @@ def get_skeleton_case_data():
 
     db_result = execute_sql_query(sql_query)
 
-    for one_result in db_result:
-        print(json.dumps({'count': one_result[0], 'average_case_age': one_result[1], 'region': one_result[2],
-                          'case_type': one_result[3]}))
+    for result in db_result:
+        count, average_case_age, region, case_type = result
+        print(json.dumps({'skeleton_case_count': count, 'average_case_age': average_case_age, 'region': region,
+                          'case_type': case_type}))
 
 
 if __name__ == "__main__":
