@@ -14,21 +14,30 @@ if __name__ == "__main__":
     action_result = execute_sql_query(long_running_query_check, Config.DB_HOST_ACTION,
                                       Config.DB_ACTION_CERTIFICATES)
 
-    for pid, age, usename, query, state in case_result:
-        if age:
-            print(json.dumps(
-                {'pid': pid, 'age': age.seconds, 'usename': usename, 'query': query, 'DB': 'Case', 'state': state},
-                default=str))
-        else:
-            print(json.dumps({'pid': pid, 'age': age, 'usename': usename, 'query': query, 'DB': 'Case', 'state': state},
-                             default=str))
+    if case_result:
+        for pid, age, usename, query, state in case_result:
+            if age:
+                print(json.dumps(
+                    {'pid': pid, 'age': age.seconds, 'usename': usename, 'query': query, 'DB': 'Case', 'state': state},
+                    default=str))
+            else:
+                print(json.dumps(
+                    {'pid': pid, 'age': age, 'usename': usename, 'query': query, 'DB': 'Case', 'state': state},
+                    default=str))
+    else:
+        print(json.dumps({'DB': 'Case', 'age': 0}))
 
-    for pid, age, usename, query, state in action_result:
-        if age:
-            print(json.dumps(
-                {'pid': pid, 'age': age.seconds, 'usename': usename, 'query': query, 'DB': 'Action', 'state': state},
-                default=str))
-        else:
-            print(
-                json.dumps({'pid': pid, 'age': age, 'usename': usename, 'query': query, 'DB': 'Action', 'state': state},
-                           default=str))
+    if action_result:
+        for pid, age, usename, query, state in action_result:
+            if age:
+                print(json.dumps(
+                    {'pid': pid, 'age': age.seconds, 'usename': usename, 'query': query, 'DB': 'Action',
+                     'state': state},
+                    default=str))
+            else:
+                print(
+                    json.dumps(
+                        {'pid': pid, 'age': age, 'usename': usename, 'query': query, 'DB': 'Action', 'state': state},
+                        default=str))
+    else:
+        print(json.dumps({'DB': 'Action', 'age': 0}))
