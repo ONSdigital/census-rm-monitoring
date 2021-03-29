@@ -23,7 +23,7 @@ if __name__ == "__main__":
             print(json.dumps({'pid': pid, 'age': age, 'usename': usename, 'DB': 'Case', 'state': state},
                              default=str))
 
-    for pid, age, usename, query, state in action_result:
+    for pid, age, usename, state in action_result:
         if age:
             print(json.dumps(
                 {'pid': pid, 'age': age.seconds, 'usename': usename, 'DB': 'Action', 'state': state},
