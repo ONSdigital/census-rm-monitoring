@@ -47,6 +47,7 @@ def get_response_events():
 
 
 def get_ccs_case_receipts():
+    # Filter on the CCS action plan ID
     sql_query = """
     SELECT CASE counts.region
                WHEN 'E' THEN 'CCS England'
@@ -69,6 +70,7 @@ def get_ccs_case_receipts():
 
 
 def get_ccs_response_events():
+    # Filter on the CCS action plan ID
     sql_query = """
     SELECT CASE counts.region
                WHEN 'E' THEN 'CCS England Responses'
